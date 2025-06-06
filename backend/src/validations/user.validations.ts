@@ -31,3 +31,7 @@ export const signUpSchema = z
       .string().min(6, "Password must be at least 6 characters")
   })
   
+
+
+export type RegisterSchemaType = z.infer<typeof signUpSchema>;
+export type SigninSchemaType = z.infer<typeof signInSchema>;
