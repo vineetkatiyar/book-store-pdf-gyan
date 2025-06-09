@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response, RequestHandler } from "express";
+import { RequestHandler } from "express";
 import { ZodError, ZodSchema } from "zod";
 
 export const validate = (schema: ZodSchema): RequestHandler => {
