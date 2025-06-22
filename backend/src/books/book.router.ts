@@ -2,9 +2,9 @@ import { Router } from "express";
 import path from "node:path";
 import bookController from "./book.controller";
 import multer from "multer";
+import { asyncHandler } from "../utils/asyncHandler";
 // import { validate } from "../middleware/validate";
 // import { bookSchemaValidation } from "../validations/book.validations";
-
 
 const bookRouter = Router();
 
@@ -19,7 +19,7 @@ bookRouter.post(
     { name: "coverImageUrl", maxCount: 1 },
     { name: "file", maxCount: 1 },
   ]),
-  bookController.createBook
+  asyncHandler(bookController.createBook),
 );
 
 export default bookRouter;

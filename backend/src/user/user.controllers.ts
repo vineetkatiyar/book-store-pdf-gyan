@@ -28,16 +28,20 @@ const user = {
         const error = createHttpError(500, "Failed to create user");
         return next(error);
       }
+      console.log("newUser", newUser);
 
       const token = sign({ sub: newUser._id }, config.jwtSecret as string, {
         expiresIn: "1d",
       });
+
+      console.log("token", token);
 
       res.status(201).json({
         accessToken: token,
         message: "User created successfully",
         user: { id: newUser._id, name: newUser.name, email: newUser.email },
       });
+
     } catch (error) {
       console.log("Error in registerUser:", error);
       if (error instanceof createHttpError.HttpError) {

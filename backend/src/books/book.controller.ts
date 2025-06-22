@@ -3,50 +3,82 @@ import path from "node:path";
 import cloudinary from "../config/cloudinary";
 import fs from "fs/promises";
 import createHttpError from "http-errors";
+import book from "./book.model";
 
 const bookController = {
   async createBook(req: Request, res: Response, next: NextFunction) {
     try {
-      const files = req.files as { [fileName: string]: Express.Multer.File[] };
+      const { title, author, genre } = req.body;
 
-      const coverImageMimeType = files.coverImageUrl[0].mimetype
-        .split("/")
-        .at(-1);
+      const files = req.files as {
+        [fieldname: string]: Express.Multer.File[];
+      };
 
-      const coverFileName = files.coverImageUrl[0].filename;
+      // 🛡 Validate required files
+      if (!files?.coverImageUrl?.[0]) {
+        return next(createHttpError(400, "Cover image is required"));
+      }
+      if (!files?.file?.[0]) {
+        return next(createHttpError(400, "Book file is required"));
+      }
 
-      const filePath = path.resolve(
+      const coverImage = files.coverImageUrl[0];
+      const bookFile = files.file[0];
+
+      // 🖼 Upload Cover Image
+      const coverImageMimeType = coverImage.mimetype.split("/").at(-1);
+      const coverFilePath = path.resolve(
         __dirname,
         "../../public/data/uploads",
-        coverFileName,
+        coverImage.filename
       );
 
-      const uploadedCoverImage = await cloudinary.uploader.upload(filePath, {
-        filename_override: coverFileName,
-        folder: "book-covers",
-        format: coverImageMimeType,
+      const uploadedCoverImage = await cloudinary.uploader.upload(
+        coverFilePath,
+        {
+          filename_override: coverImage.filename,
+          folder: "book-covers",
+          format: coverImageMimeType,
+        }
+      );
+
+      // ❌ Remove temp file
+      await fs.unlink(coverFilePath).catch((err) => {
+        console.log("Error deleting cover image file:", err);
       });
 
-      await fs.unlink(filePath);
-
-      const bookFileName = files.file[0].filename;
+      // 📘 Upload Book File
       const bookFilePath = path.resolve(
         __dirname,
         "../../public/data/uploads",
-        bookFileName,
+        bookFile.filename
       );
 
-      const uploadBookFile = await cloudinary.uploader.upload(bookFilePath, {
+      const uploadedBookFile = await cloudinary.uploader.upload(bookFilePath, {
         resource_type: "raw",
-        filename_override: bookFileName,
+        filename_override: bookFile.filename,
         folder: "book-pdfs",
         format: "pdf",
       });
 
-      await fs.unlink(bookFilePath);
+      // ❌ Remove temp file
+      await fs.unlink(bookFilePath).catch((err) => {
+        console.log("Error deleting book PDF file:", err);
+      });
 
-      console.log("Uploaded book file:", uploadBookFile);
-      console.log("Uploaded cover image:", uploadedCoverImage);
+      // 📚 Create Book Document
+      const newBook = await book.create({
+        title,
+        author,
+        genre,
+        coverImageUrl: uploadedCoverImage.secure_url,
+        file: uploadedBookFile.secure_url,
+      });
+
+      return res.status(201).json({
+        book: newBook,
+        message: "Book created successfully",
+      });
     } catch (error) {
       console.log("Error creating book:", error);
       return next(createHttpError(500, "Failed to create book"));
