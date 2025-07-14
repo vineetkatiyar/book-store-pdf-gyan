@@ -14,7 +14,7 @@ const bookController = {
         [fieldname: string]: Express.Multer.File[];
       };
 
-      // 🛡 Validate required files
+      //  Validate required files
       if (!files?.coverImageUrl?.[0]) {
         return next(createHttpError(400, "Cover image is required"));
       }
@@ -25,7 +25,7 @@ const bookController = {
       const coverImage = files.coverImageUrl[0];
       const bookFile = files.file[0];
 
-      // 🖼 Upload Cover Image
+      // Upload Cover Image
       const coverImageMimeType = coverImage.mimetype.split("/").at(-1);
       const coverFilePath = path.resolve(
         __dirname,
@@ -42,7 +42,7 @@ const bookController = {
         }
       );
 
-      // ❌ Remove temp file
+      //  Remove temp file
       await fs.unlink(coverFilePath).catch((err) => {
         console.log("Error deleting cover image file:", err);
       });

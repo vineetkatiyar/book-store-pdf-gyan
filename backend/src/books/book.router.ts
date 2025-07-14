@@ -3,6 +3,7 @@ import path from "node:path";
 import bookController from "./book.controller";
 import multer from "multer";
 import { asyncHandler } from "../utils/asyncHandler";
+import { authenticate } from "../middleware/authenticate";
 // import { validate } from "../middleware/validate";
 // import { bookSchemaValidation } from "../validations/book.validations";
 
@@ -15,6 +16,7 @@ const upload = multer({
 
 bookRouter.post(
   "/",
+  authenticate,
   upload.fields([
     { name: "coverImageUrl", maxCount: 1 },
     { name: "file", maxCount: 1 },
